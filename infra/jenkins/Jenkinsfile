@@ -31,7 +31,7 @@ pipeline {
         SNYK_TOKEN   = credentials('snyk-token')
         NVD_API_KEY  = credentials('nvd-api-key')
 
-        # Public key — safe to commit (used at frontend build time)
+        //Public key — safe to commit (used at frontend build time)
         VITE_CLERK_PUBLISHABLE_KEY = 'pk_test_Y3J1Y2lhbC1taW5rLTY2NjUuY2xlcmsuYWNjb3VudHMuZGV2JA'
     }
 
