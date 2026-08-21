@@ -293,10 +293,10 @@ pipeline {
             steps {
                 script {
                     def dcTool = tool 'OWASP-Dependency-Check'
-                    
+
                     sh """
                         set -e
-                        NVD_KEY="${NVD_API_KEY:-}"
+                        NVD_KEY="\${NVD_API_KEY:-}"
                         NVD_ARGS=()
                         if [ -n "\$NVD_KEY" ]; then
                             NVD_ARGS=(--nvdApiKey "\$NVD_KEY")
