@@ -1,0 +1,48 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── Secrets & credentials — never commit ─────────────────────────────
+# SSH / cloud private keys
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# Environment files with real credentials (keep the .example templates)
+.env
+.env.*
+!.env.example
+
+# Kubernetes secrets with real values (keep k8s/secret.yaml as placeholder template)
+k8s/secrets.real.yaml
+
+# Terraform local state, provider cache, and real variable values
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+*.tfvars.json
+!terraform.tfvars.example

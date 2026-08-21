@@ -1,0 +1,50 @@
+# Terraform variables for the Stayly platform
+# Copy to terraform.tfvars and fill in your values.
+
+aws_region     = "ap-southeast-2"
+environment    = "production"
+app_name       = "stayly"
+ubuntu_ami_id  = "ami-06259b63260eddc13"
+
+vpc_cidr            = "10.0.0.0/16"
+public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+
+ssh_key_name              = "stayly-key"
+ssh_public_key            = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCZudhssCHhcHCwcu9dVXM7LfG7o0e37Kvefc+KAWShZ8v78+o7oe31lA78Hw0PQnoD05meLz9yH/8jn8yLKDqnOch4MdKv8+JEzBDjlBD2TSaZagBcCWHz1mWhrdvm/jDPrAZEmSP9qNtv0rWenERaiKZxIOaIVLQsrr3/ztpAlSuE/RtDuyd5k0eBzJq0YXimf1iJFdQbnngSK7IGhXFlQamUc33nkkC3Jj7esszMNBn2dA7y/27nw8Y2MQLrHovfY5y03SzfixxDtXjpJBlXMEBw85C5y/XWlQ1yIZvfRpvRvQjmFRwDUIBLlBv27iEd4uZdMhkWMeg57Y/bmIj/"
+ssh_private_key_path      = "/Users/admin/Downloads/stayly-key.pem"
+admin_allowed_cidr_blocks = ["0.0.0.0/0"]
+
+monitoring_allowed_cidr_blocks = ["0.0.0.0/0"]
+monitoring_instance_type       = "c7i-flex.large"
+monitoring_root_volume_size    = 8
+
+prometheus_enabled = true
+prometheus_version = "2.51.2"
+
+grafana_enabled        = true
+grafana_admin_password = ""
+
+alertmanager_enabled = false
+alertmanager_version = "0.27.0"
+
+microservice_names       = ["backend", "frontend"]
+ecr_image_tag_mutability = "MUTABLE"
+ecr_scan_on_push         = true
+ecr_force_delete         = true
+
+eks_enabled                    = true
+eks_version                    = "1.36"
+eks_public_access_cidr_blocks  = ["0.0.0.0/0"]
+eks_node_instance_types        = ["c7i-flex.large"]
+eks_node_capacity_type         = "ON_DEMAND"
+eks_node_disk_size             = 20
+eks_node_min_size              = 1
+eks_node_desired_size          = 2
+eks_node_max_size              = 3
+eks_admin_role_arn             = "arn:aws:iam::630243422439:user/Lekym"
+
+jenkins_instance_type        = "c7i.large"
+jenkins_root_volume_size     = 50
+sonarqube_version            = "10.6.0.92116"
+
+

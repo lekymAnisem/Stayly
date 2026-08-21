@@ -1,0 +1,114 @@
+{{- range $key, $svc := .Values.services }}
+{{- if $svc.enabled }}
+{{- $name := $svc.name | default $key }}
+{{- $component := $key }}
+{{- $port := $svc.port | default $svc.service.port }}
+{{- $secretName := $.Values.secrets.existingSecretName | default $.Values.global.existingSecretName | default (printf "%s-secrets" (include "stayly.fullname" $)) }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    {{- include "stayly.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $component }}
+spec:
+  replicas: {{ $svc.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "stayly.name" $ }}
+      app.kubernetes.io/component: {{ $component }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+  template:
+    metadata:
+      {{- with $.Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/name: {{ include "stayly.name" $ }}
+        app.kubernetes.io/component: {{ $component }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+    spec:
+      {{- if $.Values.serviceAccount.create }}
+      serviceAccountName: {{ $.Values.serviceAccount.name | default (include "stayly.fullname" $) }}
+      {{- end }}
+      {{- with $.Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 30
+      {{- if $svc.nginxConfigMap }}
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: {{ $svc.nginxConfigMap }}
+      {{- end }}
+      {{- with $.Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          image: {{ include "stayly.image" (dict "repository" $svc.image.repository "tag" $svc.image.tag "root" $) }}
+          imagePullPolicy: {{ $svc.image.pullPolicy | default "IfNotPresent" }}
+          {{- with $.Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - containerPort: {{ $port }}
+              protocol: TCP
+          {{- if $svc.envVars }}
+          env:
+            {{- range $envKey, $envVal := $svc.envVars }}
+            - name: {{ $envKey }}
+              value: "{{ $envVal }}"
+            {{- end }}
+          {{- end }}
+          {{- if not $svc.skipEnvFrom }}
+          envFrom:
+            - configMapRef:
+                name: {{ $.Values.global.configMapName | default (printf "%s-config" (include "stayly.fullname" $)) }}
+            - secretRef:
+                name: {{ $secretName }}
+          {{- end }}
+          {{- if and $svc.livenessProbe (ne ($svc.livenessProbe.enabled | toString) "false") }}
+          livenessProbe:
+            httpGet:
+              path: {{ $svc.livenessProbe.path }}
+              port: {{ $svc.livenessProbe.port | default $port }}
+            initialDelaySeconds: {{ $svc.livenessProbe.initialDelaySeconds | default 10 }}
+            periodSeconds: {{ $svc.livenessProbe.periodSeconds | default 15 }}
+            timeoutSeconds: {{ $svc.livenessProbe.timeoutSeconds | default 5 }}
+            failureThreshold: {{ $svc.livenessProbe.failureThreshold | default 3 }}
+          {{- end }}
+          {{- if and $svc.readinessProbe (ne ($svc.readinessProbe.enabled | toString) "false") }}
+          readinessProbe:
+            httpGet:
+              path: {{ $svc.readinessProbe.path }}
+              port: {{ $svc.readinessProbe.port | default $port }}
+            initialDelaySeconds: {{ $svc.readinessProbe.initialDelaySeconds | default 5 }}
+            periodSeconds: {{ $svc.readinessProbe.periodSeconds | default 10 }}
+            timeoutSeconds: {{ $svc.readinessProbe.timeoutSeconds | default 5 }}
+            failureThreshold: {{ $svc.readinessProbe.failureThreshold | default 3 }}
+          {{- end }}
+          resources:
+            {{- toYaml $svc.resources | nindent 12 }}
+          {{- if $svc.nginxConfigMap }}
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: nginx.conf
+          {{- end }}
+{{- end }}
+{{- end }}

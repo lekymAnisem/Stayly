@@ -1,0 +1,5 @@
+# Clerk publishable key (pk_test_...) — public by design, embedded in the
+# frontend bundle and meant to be distributed with client code. Not a secret.
+k8s/configmap.yaml:generic-api-key:18
+infra/jenkins/Jenkinsfile:generic-api-key:35
+infra/helm/stayly/values.yaml:generic-api-key:36

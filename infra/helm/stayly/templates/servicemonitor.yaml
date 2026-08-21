@@ -1,0 +1,39 @@
+{{- if and .Values.metrics.enabled .Values.metrics.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "stayly.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "stayly.labels" . | nindent 4 }}
+    {{- with .Values.metrics.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - {{ include "stayly.name" . }}
+      - key: app.kubernetes.io/instance
+        operator: In
+        values:
+          - {{ .Release.Name }}
+      - key: app.kubernetes.io/component
+        operator: In
+        values:
+          {{- range $key, $svc := .Values.services }}
+          {{- if and $svc.enabled (not $svc.skipMetrics) }}
+          - {{ $key }}
+          {{- end }}
+          {{- end }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.namespace }}
+  endpoints:
+    - port: http
+      path: {{ .Values.metrics.path | default "/metrics" }}
+      interval: {{ .Values.metrics.interval | default "30s" }}
+      scrapeTimeout: {{ .Values.metrics.scrapeTimeout | default "10s" }}
+{{- end }}

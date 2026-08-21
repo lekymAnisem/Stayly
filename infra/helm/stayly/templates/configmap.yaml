@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.global.configMapName | default (printf "%s-config" (include "stayly.fullname" .)) }}
+  namespace: {{ .Values.namespace }}
+  labels: {{ include "stayly.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.config }}
+  {{ $key }}: "{{ $value }}"
+  {{- end }}

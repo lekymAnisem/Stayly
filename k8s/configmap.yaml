@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stayly-config
+  namespace: stayly
+  labels:
+    app.kubernetes.io/name: stayly
+data:
+  # Backend
+  PORT: "4000"
+  CORS_ORIGIN: "*"
+  SEED_ON_BOOT: "true"
+  MIGRATIONS_ON_BOOT: "true"
+  # PostgreSQL
+  POSTGRES_DB: stayly
+  POSTGRES_USER: stayly
+  # Clerk — public, safe in a ConfigMap
+  CLERK_PUBLISHABLE_KEY: pk_test_Y3J1Y2lhbC1taW5rLTY2NjUuY2xlcmsuYWNjb3VudHMuZGV2JA
+  # Admin panel — Clerk emails allowed to manage listings (comma-separated).
+  # Leave empty to require the admin password.
+  ALLOWED_ADMIN_EMAILS: ""
+  # Frontend proxy target (nginx.conf proxies /api to this service DNS name)
+  BACKEND_SERVICE: backend

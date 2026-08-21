@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: stayly
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: stayly
+    tier: data
+spec:
+  clusterIP: None # headless — pairs with the StatefulSet's stable DNS
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres

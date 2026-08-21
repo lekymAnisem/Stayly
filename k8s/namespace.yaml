@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: stayly
+  labels:
+    app.kubernetes.io/name: stayly
+    app.kubernetes.io/part-of: stayly

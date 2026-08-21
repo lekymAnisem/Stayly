@@ -1,0 +1,213 @@
+# Stayly Helm values
+# Environment: production
+# Namespace: stayly
+
+namespace: stayly
+nameOverride: ""
+fullnameOverride: ""
+imageRegistry: "630243422439.dkr.ecr.ap-southeast-2.amazonaws.com"
+global:
+  nodeEnv: "production"
+  configMapName: "stayly-config"
+  existingSecretName: "stayly-secrets"
+# The Secret is created by this chart (secrets.create=true) so Argo CD always
+# provisions it on sync. Do not commit real DATABASE_URL, Cloudinary credentials,
+# or Clerk secrets to git; prefer externalizing them via SealedSecrets or an
+# External Secrets operator in a production hardening pass.
+secrets:
+  create: true
+  existingSecretName: "stayly-secrets"
+  postgresPassword: "change-me-in-production"
+  databaseUrl: "postgresql://stayly:stayly@postgres:5432/stayly?sslmode=disable"
+  cloudinaryCloudName: "dk5cvkoy7"
+  cloudinaryApiKey: "347127826581497"
+  cloudinaryApiSecret: "change-me-in-production"
+  adminPassword: "stayly-admin"
+  clerkSecretKey: ""
+config:
+  NODE_ENV: "production"
+  PORT: "4000"
+  CORS_ORIGIN: "*"
+  SEED_ON_BOOT: "true"
+  MIGRATIONS_ON_BOOT: "true"
+  POSTGRES_DB: "stayly"
+  POSTGRES_USER: "stayly"
+  # Public key — safe to commit
+  CLERK_PUBLISHABLE_KEY: "pk_test_Y3J1Y2lhbC1taW5rLTY2NjUuY2xlcmsuYWNjb3VudHMuZGV2JA"
+  ALLOWED_ADMIN_EMAILS: ""
+  BACKEND_SERVICE: "backend"
+services:
+  backend:
+    enabled: true
+    name: backend
+    port: 4000
+    replicas: 2
+    serviceType: ClusterIP
+    service:
+      type: ClusterIP
+      port: 4000
+      targetPort: 4000
+    image:
+      repository: stayly-production-backend
+      tag: "1"
+      pullPolicy: IfNotPresent
+    envVars:
+      PORT: "4000"
+    livenessProbe:
+      enabled: true
+      path: /api/health
+      port: 4000
+      initialDelaySeconds: 30
+      periodSeconds: 15
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      enabled: true
+      path: /api/health
+      port: 4000
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 5
+      failureThreshold: 3
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "256Mi"
+  frontend:
+    enabled: true
+    name: frontend
+    port: 8080
+    replicas: 2
+    skipMetrics: true
+    serviceType: ClusterIP
+    service:
+      type: ClusterIP
+      port: 80
+      targetPort: 8080
+    image:
+      repository: stayly-production-frontend
+      tag: "1"
+      pullPolicy: IfNotPresent
+    envVars: {}
+    livenessProbe:
+      enabled: true
+      path: /
+      port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 15
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      enabled: true
+      path: /
+      port: 8080
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "64Mi"
+      limits:
+        cpu: "250m"
+        memory: "128Mi"
+    nginxConfigMap: "frontend-nginx-config"
+    skipEnvFrom: true
+database:
+  enabled: true
+  name: postgres
+  port: 5432
+  replicas: 1
+  image:
+    repository: stayly-production-database
+    tag: "1"
+    pullPolicy: IfNotPresent
+  storageSize: 5Gi
+  # The official postgres image runs its entrypoint as root and drops
+  # privileges internally, so it cannot use the global runAsNonRoot context.
+  podSecurityContext: {}
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 5
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "2m"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  rules:
+    - host: stayly.local
+      paths:
+        - path: /api
+          pathType: Prefix
+          serviceName: backend
+          servicePort: 4000
+        - path: /
+          pathType: Prefix
+          serviceName: frontend
+          servicePort: 80
+  tls: []
+metrics:
+  enabled: false
+  path: /metrics
+  interval: 30s
+  scrapeTimeout: 10s
+  serviceMonitor:
+    enabled: false
+    labels:
+      release: monitoring
+serviceAccount:
+  create: true
+  name: stayly
+  annotations: {}
+podAnnotations: {}
+podSecurityContext:
+  runAsNonRoot: true
+  fsGroup: 101
+# Container security hardening. Images define their own non-root user;
+# Kubernetes enforces non-root + drops all capabilities + seccomp.
+containerSecurityContext:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+nodeSelector: {}
+tolerations: []
+affinity: {}
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80

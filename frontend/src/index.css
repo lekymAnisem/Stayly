@@ -1,0 +1,422 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 font-sans text-white antialiased;
+  letter-spacing: -0.02em;
+  background-attachment: fixed;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Futuristic body background with subtle animation */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(168, 85, 247, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+  animation: cosmic-drift 20s ease-in-out infinite;
+}
+
+@keyframes cosmic-drift {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1) rotate(0deg);
+  }
+  33% { 
+    opacity: 0.8;
+    transform: scale(1.02) rotate(0.5deg);
+  }
+  66% { 
+    opacity: 0.4;
+    transform: scale(0.98) rotate(-0.5deg);
+  }
+}
+
+/* Cyber grid overlay */
+.cyber-grid-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(14, 165, 233, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Enhanced scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, rgba(14, 165, 233, 0.6), rgba(236, 72, 153, 0.6));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, rgba(14, 165, 233, 0.8), rgba(236, 72, 153, 0.8));
+}
+
+/* Category rail with futuristic styling */
+.category-rail {
+  scrollbar-width: none;
+}
+.category-rail::-webkit-scrollbar {
+  display: none;
+}
+
+/* Futuristic selection */
+::selection {
+  background: rgba(14, 165, 233, 0.3);
+  color: rgb(186, 230, 253);
+  text-shadow: 0 0 8px rgba(14, 165, 233, 0.4);
+}
+
+/* Enhanced animations */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glow-pulse {
+  0% { 
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(14, 165, 233, 0.6), 0 0 60px rgba(14, 165, 233, 0.2);
+  }
+  100% { 
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+  }
+}
+
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% { 
+    transform: translateY(-8px) rotate(1deg);
+  }
+  66% { 
+    transform: translateY(-4px) rotate(-1deg);
+  }
+}
+
+@keyframes cyber-blink {
+  0%, 70% { 
+    opacity: 1;
+    box-shadow: 0 0 15px currentColor;
+  }
+  71%, 85% { 
+    opacity: 0.3;
+    box-shadow: 0 0 5px currentColor;
+  }
+  86%, 100% { 
+    opacity: 1;
+    box-shadow: 0 0 15px currentColor;
+  }
+}
+
+@keyframes hologram-shift {
+  0% { 
+    background-position: 0% 0%;
+    opacity: 0.1;
+  }
+  50% { 
+    background-position: 100% 100%;
+    opacity: 0.3;
+  }
+  100% { 
+    background-position: 0% 0%;
+    opacity: 0.1;
+  }
+}
+
+@keyframes data-stream {
+  0% { 
+    transform: translateY(100vh) scaleY(0);
+    opacity: 0;
+  }
+  10% { 
+    opacity: 1;
+    scaleY: 1;
+  }
+  90% { 
+    opacity: 1;
+    scaleY: 1;
+  }
+  100% { 
+    transform: translateY(-20px) scaleY(0);
+    opacity: 0;
+  }
+}
+
+/* Futuristic skeleton */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(14, 165, 233, 0.1) 25%,
+    rgba(236, 72, 153, 0.2) 37%,
+    rgba(14, 165, 233, 0.1) 63%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.8s ease infinite;
+}
+
+/* Animation classes */
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out both;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out both;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite alternate;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-cyber-blink {
+  animation: cyber-blink 1.5s ease-in-out infinite;
+}
+
+.animate-hologram-shift {
+  animation: hologram-shift 3s ease-in-out infinite;
+}
+
+.animate-data-stream {
+  animation: data-stream 20s linear infinite;
+}
+
+/* Utility classes */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+/* Glass morphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Cyber grid backgrounds */
+.bg-cyber-grid {
+  background-image: 
+    linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
+}
+
+.bg-grid-sm { background-size: 20px 20px; }
+.bg-grid-md { background-size: 40px 40px; }
+.bg-grid-lg { background-size: 80px 80px; }
+
+/* Hologram effect */
+.bg-hologram {
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
+  background-size: 200% 200%;
+}
+
+/* Enhanced dual-range price slider with futuristic styling */
+.dual-range {
+  position: relative;
+  height: 28px;
+}
+
+.dual-range .track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 6px;
+  transform: translateY(-50%);
+  border-radius: 9999px;
+  background: linear-gradient(90deg, 
+    rgba(14, 165, 233, 0.2), 
+    rgba(236, 72, 153, 0.2), 
+    rgba(168, 85, 247, 0.2)
+  );
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dual-range .fill {
+  position: absolute;
+  top: 50%;
+  height: 6px;
+  transform: translateY(-50%);
+  border-radius: 9999px;
+  background: linear-gradient(90deg, 
+    rgba(14, 165, 233, 0.8), 
+    rgba(236, 72, 153, 0.8)
+  );
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.4);
+}
+
+.dual-range input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  pointer-events: none;
+  margin: 0;
+}
+
+.dual-range input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: auto;
+  height: 24px;
+  width: 24px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, 
+    rgba(14, 165, 233, 0.9), 
+    rgba(236, 72, 153, 0.9)
+  );
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(14, 165, 233, 0.3),
+    0 0 15px rgba(236, 72, 153, 0.2);
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.dual-range input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 6px 16px rgba(14, 165, 233, 0.4),
+    0 0 25px rgba(236, 72, 153, 0.3);
+}
+
+.dual-range input[type="range"]::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.05);
+}
+
+.dual-range input[type="range"]::-moz-range-thumb {
+  pointer-events: auto;
+  height: 24px;
+  width: 24px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, 
+    rgba(14, 165, 233, 0.9), 
+    rgba(236, 72, 153, 0.9)
+  );
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(14, 165, 233, 0.3),
+    0 0 15px rgba(236, 72, 153, 0.2);
+  cursor: grab;
+}
+
+.dual-range input[type="range"]:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid rgba(14, 165, 233, 0.6);
+  outline-offset: 2px;
+}
+
+.dual-range input[type="range"]:focus-visible::-moz-range-thumb {
+  outline: 2px solid rgba(14, 165, 233, 0.6);
+  outline-offset: 2px;
+}
+
+/* Text effects */
+.text-glow {
+  text-shadow: 0 0 10px currentColor;
+}
+
+.text-cyber-glow {
+  text-shadow: 
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 15px currentColor;
+}

@@ -1,0 +1,35 @@
+{{- range $key, $svc := .Values.services }}
+{{- if $svc.enabled }}
+{{- $name := $svc.name | default $key }}
+{{- $component := $key }}
+{{- $servicePort := $svc.service.port | default $svc.port }}
+{{- $targetPort := $svc.service.targetPort | default $svc.port }}
+{{- $serviceType := $svc.service.type | default $svc.serviceType | default "ClusterIP" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    {{- include "stayly.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $component }}
+  {{- if and $.Values.metrics.enabled (not $svc.skipMetrics) }}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: {{ $.Values.metrics.path | default "/metrics" | quote }}
+    prometheus.io/port: {{ $servicePort | quote }}
+  {{- end }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ include "stayly.name" $ }}
+    app.kubernetes.io/component: {{ $component }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+  ports:
+    - port: {{ $servicePort }}
+      targetPort: {{ $targetPort }}
+      protocol: TCP
+      name: http
+  type: {{ $serviceType }}
+{{- end }}
+{{- end }}

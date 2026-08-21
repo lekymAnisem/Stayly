@@ -1,0 +1,97 @@
+{{- if .Values.database.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.database.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "stayly.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: {{ include "stayly.name" . }}
+    app.kubernetes.io/component: database
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - port: {{ .Values.database.port }}
+      targetPort: postgres
+      protocol: TCP
+      name: postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.database.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "stayly.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  serviceName: {{ .Values.database.name }}
+  replicas: {{ .Values.database.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "stayly.name" . }}
+      app.kubernetes.io/component: database
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "stayly.name" . }}
+        app.kubernetes.io/component: database
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- with .Values.database.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: postgres
+          image: {{ include "stayly.image" (dict "repository" .Values.database.image.repository "tag" .Values.database.image.tag "root" $) }}
+          imagePullPolicy: {{ .Values.database.image.pullPolicy | default "IfNotPresent" }}
+          {{- with .Values.database.containerSecurityContext | default .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: postgres
+              containerPort: {{ .Values.database.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.global.configMapName | default (printf "%s-config" (include "stayly.fullname" $)) }}
+            - secretRef:
+                name: {{ .Values.secrets.existingSecretName | default .Values.global.existingSecretName | default (printf "%s-secrets" (include "stayly.fullname" $)) }}
+          {{- if .Values.database.livenessProbe }}
+          livenessProbe:
+            tcpSocket:
+              port: postgres
+            initialDelaySeconds: {{ .Values.database.livenessProbe.initialDelaySeconds | default 30 }}
+            periodSeconds: {{ .Values.database.livenessProbe.periodSeconds | default 20 }}
+            timeoutSeconds: {{ .Values.database.livenessProbe.timeoutSeconds | default 5 }}
+            failureThreshold: {{ .Values.database.livenessProbe.failureThreshold | default 5 }}
+          {{- end }}
+          {{- if .Values.database.readinessProbe }}
+          readinessProbe:
+            tcpSocket:
+              port: postgres
+            initialDelaySeconds: {{ .Values.database.readinessProbe.initialDelaySeconds | default 5 }}
+            periodSeconds: {{ .Values.database.readinessProbe.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.database.readinessProbe.timeoutSeconds | default 5 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.database.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.database.storageSize | default "5Gi" }}
+{{- end }}

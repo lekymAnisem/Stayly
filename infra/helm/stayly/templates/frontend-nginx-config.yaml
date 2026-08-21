@@ -1,0 +1,36 @@
+{{- if .Values.services.frontend.nginxConfigMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.services.frontend.nginxConfigMap }}
+  namespace: {{ .Values.namespace }}
+  labels: {{ include "stayly.labels" . | nindent 4 }}
+data:
+  nginx.conf: |
+    server {
+      listen 8080;
+      server_name _;
+
+      root /usr/share/nginx/html;
+      index index.html;
+
+      location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache, must-revalidate" always;
+      }
+
+      location /api/ {
+        proxy_pass http://{{ .Values.services.backend.name }}:{{ .Values.services.backend.port }};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+
+      location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+      }
+    }
+{{- end }}
