@@ -84,7 +84,7 @@ services:
     skipMetrics: true
     serviceType: ClusterIP
     service:
-      type: ClusterIP
+      type: LoadBalancer
       port: 80
       targetPort: 8080
     image:
