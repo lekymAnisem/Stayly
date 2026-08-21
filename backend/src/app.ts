@@ -2,6 +2,7 @@ import cors from 'cors'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import { config } from './config.js'
 import { apiRouter } from './routes/index.js'
+import { metricsHandler, metricsMiddleware } from './lib/metrics.js'
 
 export function createApp() {
   const app = express()
@@ -9,10 +10,15 @@ export function createApp() {
   app.disable('x-powered-by')
   app.use(cors({ origin: config.corsOrigin }))
   app.use(express.json({ limit: '1mb' }))
+  app.use(metricsMiddleware)
 
   app.get('/', (_req, res) => {
     res.json({ service: 'stayly-api', docs: '/api/health' })
   })
+
+  // Prometheus scrape endpoints (bare for in-cluster, /api/* for the nginx proxy path)
+  app.get('/metrics', metricsHandler)
+  app.get('/api/metrics', metricsHandler)
 
   app.use('/api', apiRouter)
 

@@ -82,6 +82,12 @@ variable "prometheus_enabled" {
   default     = true
 }
 
+variable "app_metrics_url" {
+  description = "Host the monitoring server scrapes app metrics from (e.g. frontend LoadBalancer DNS). Empty disables the app scrape job."
+  type        = string
+  default     = ""
+}
+
 variable "prometheus_version" {
   description = "Prometheus version to install"
   type        = string

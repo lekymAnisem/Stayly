@@ -69,6 +69,7 @@ resource "aws_instance" "monitoring" {
     alertmanager_version   = var.alertmanager_version
     app_name               = var.app_name
     environment            = var.environment
+    app_metrics_url        = var.app_metrics_url
   })
 
   tags = {
