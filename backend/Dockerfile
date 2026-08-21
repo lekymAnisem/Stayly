@@ -15,5 +15,6 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
 EXPOSE 4000
-USER node
+# Numeric UID required for Kubernetes runAsNonRoot verification (node = 1000)
+USER 1000
 CMD ["node", "dist/index.js"]

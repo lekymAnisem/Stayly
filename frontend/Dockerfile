@@ -14,5 +14,6 @@ COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 RUN touch /var/run/nginx.pid && \
     chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /etc/nginx/conf.d /var/run/nginx.pid
-USER nginx
+# Numeric UID required for Kubernetes runAsNonRoot verification (nginx = 101)
+USER 101
 EXPOSE 8080
