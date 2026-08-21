@@ -290,51 +290,50 @@ pipeline {
         stage('Security Scans') {
             parallel {
                 stage('OWASP Dependency-Check') {
-                    steps {
-                        sh '''
-                            set -e
-                            command -v dependency-check >/dev/null 2>&1 || {
-                                echo "ERROR: OWASP dependency-check CLI is not installed on the Jenkins agent"
-                                exit 1
-                            }
+            steps {
+                script {
+                    def dcTool = tool 'OWASP-Dependency-Check'
+                    
+                    sh """
+                        set -e
+                        NVD_KEY="${NVD_API_KEY:-}"
+                        NVD_ARGS=()
+                        if [ -n "\$NVD_KEY" ]; then
+                            NVD_ARGS=(--nvdApiKey "\$NVD_KEY")
+                            echo "Using NVD API key for CVE data"
+                        else
+                            echo "WARNING: NVD_API_KEY not set; dependency-check will use the public NVD API"
+                        fi
 
-                            NVD_KEY="${NVD_API_KEY:-}"
-                            NVD_ARGS=()
-                            if [ -n "$NVD_KEY" ]; then
-                                NVD_ARGS=(--nvdApiKey "$NVD_KEY")
-                                echo "Using NVD API key for CVE data"
-                            else
-                                echo "WARNING: NVD_API_KEY not set; dependency-check will use the public NVD API"
-                            fi
+                        rm -rf owasp-reports && mkdir -p owasp-reports
 
-                            rm -rf owasp-reports && mkdir -p owasp-reports
+                        "${dcTool}/bin/dependency-check.sh" \\
+                            --project "Stayly" \\
+                            --scan . \\
+                            --format HTML \\
+                            --format JSON \\
+                            --out owasp-reports \\
+                            --failOnCVSS 7 \\
+                            --exclude "**/node_modules/**" \\
+                            --exclude "**/.git/**" \\
+                            --exclude "**/dist/**" \\
+                            --exclude "**/coverage/**" \\
+                            "\${NVD_ARGS[@]}"
 
-                            dependency-check \
-                                --project "Stayly" \
-                                --scan . \
-                                --format HTML \
-                                --format JSON \
-                                --out owasp-reports \
-                                --failOnCVSS 7 \
-                                --exclude "**/node_modules/**" \
-                                --exclude "**/.git/**" \
-                                --exclude "**/dist/**" \
-                                --exclude "**/coverage/**" \
-                                "${NVD_ARGS[@]}"
-
-                            echo "OWASP Dependency-Check passed: no vulnerabilities with CVSS >= 7."
-                        '''
-                    }
-
-                    post {
-                        always {
-                            archiveArtifacts(
-                                artifacts: 'owasp-reports/**',
-                                allowEmptyArchive: true
-                            )
-                        }
-                    }
+                        echo "OWASP Dependency-Check passed: no vulnerabilities with CVSS >= 7."
+                    """
                 }
+            }
+
+            post {
+                always {
+                    archiveArtifacts(
+                        artifacts: 'owasp-reports/**',
+                        allowEmptyArchive: true
+                    )
+                }
+            }
+        }
 
                 stage('Snyk Scan') {
                     steps {
