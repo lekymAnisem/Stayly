@@ -31,7 +31,7 @@ pipeline {
         SNYK_TOKEN   = credentials('snyk-token')
         NVD_API_KEY  = credentials('nvd-api-key')
 
-        //Public key — safe to commit (used at frontend build time)
+        // Public key — safe to commit (used at frontend build time)
         VITE_CLERK_PUBLISHABLE_KEY = 'pk_test_Y3J1Y2lhbC1taW5rLTY2NjUuY2xlcmsuYWNjb3VudHMuZGV2JA'
     }
 
@@ -44,7 +44,6 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                // TODO: set the Stayly repository URL
                 git branch: 'main',
                     credentialsId: 'github-token',
                     url: 'https://github.com/lekymAnisem/Stayly.git'
@@ -53,38 +52,33 @@ pipeline {
 
         stage('Verify Project Structure') {
             steps {
-                dir('AirBnB-Clone') {
-                    sh '''
-                        set -e
-                        echo "Workspace: $(pwd)"
-                        ls -la
+                sh '''
+                    set -e
+                    echo "Workspace: $(pwd)"
+                    ls -la
 
-                        for tier in backend frontend; do
-                            test -d "$tier" || { echo "ERROR: $tier not found"; exit 1; }
-                        done
+                    for tier in backend frontend; do
+                        test -d "$tier" || { echo "ERROR: $tier not found"; exit 1; }
+                    done
 
-                        test -f "$VALUES_FILE" || { echo "ERROR: $VALUES_FILE not found"; exit 1; }
-                    '''
-                }
+                    test -f "$VALUES_FILE" || { echo "ERROR: $VALUES_FILE not found"; exit 1; }
+                '''
             }
         }
 
         stage('Verify Required Tools') {
             steps {
-                dir('AirBnB-Clone') {
-                    sh '''
-                        set -e
-                        echo "Node: $(node --version)"
-                        echo "NPM: $(npm --version)"
-                        java -version
-                        docker --version
-                        aws --version
-                        trivy --version
-                        dependency-check --version
-                        snyk --version
-                        yq --version
-                    '''
-                }
+                sh '''
+                    set -e
+                    echo "Node: $(node --version)"
+                    echo "NPM: $(npm --version)"
+                    java -version
+                    docker --version
+                    aws --version
+                    trivy --version || true
+                    snyk --version || true
+                    yq --version || true
+                '''
             }
         }
 
@@ -121,7 +115,7 @@ pipeline {
             parallel {
                 stage('Backend Dependencies') {
                     steps {
-                        dir('AirBnB-Clone/backend') {
+                        dir('backend') {
                             sh '''
                                 set -e
                                 if [ -f package-lock.json ]; then npm ci; else npm install; fi
@@ -132,7 +126,7 @@ pipeline {
 
                 stage('Frontend Dependencies') {
                     steps {
-                        dir('AirBnB-Clone/frontend') {
+                        dir('frontend') {
                             sh '''
                                 set -e
                                 if [ -f package-lock.json ]; then npm ci; else npm install; fi
@@ -147,7 +141,7 @@ pipeline {
             parallel {
                 stage('Backend TypeScript') {
                     steps {
-                        dir('AirBnB-Clone/backend') {
+                        dir('backend') {
                             sh '''
                                 set -e
                                 if npm run 2>/dev/null | grep -q "typecheck"; then
@@ -164,7 +158,7 @@ pipeline {
 
                 stage('Frontend TypeScript') {
                     steps {
-                        dir('AirBnB-Clone/frontend') {
+                        dir('frontend') {
                             sh '''
                                 set -e
                                 if npm run 2>/dev/null | grep -q "typecheck"; then
@@ -185,7 +179,7 @@ pipeline {
             parallel {
                 stage('Backend Tests') {
                     steps {
-                        dir('AirBnB-Clone/backend') {
+                        dir('backend') {
                             sh '''
                                 set -e
                                 if npm run 2>/dev/null | grep -q "test"; then
@@ -200,7 +194,7 @@ pipeline {
 
                 stage('Frontend Tests') {
                     steps {
-                        dir('AirBnB-Clone/frontend') {
+                        dir('frontend') {
                             sh '''
                                 set -e
                                 if npm run 2>/dev/null | grep -q "test"; then
@@ -215,10 +209,6 @@ pipeline {
             }
         }
 
-        /*
-         * SonarQube scans run sequentially to avoid
-         * waitForQualityGate() associating with the wrong task.
-         */
         stage('SonarQube Backend Analysis') {
             steps {
                 script {
@@ -229,10 +219,7 @@ pipeline {
                     withSonarQubeEnv(env.SONAR_SERVER) {
                         sh """
                             set -e
-
                             echo "SonarScanner: ${scannerHome}"
-
-                            cd AirBnB-Clone
 
                             "${scannerHome}/bin/sonar-scanner" \
                                 -Dsonar.projectKey=stayly-backend \
@@ -271,10 +258,7 @@ pipeline {
                     withSonarQubeEnv(env.SONAR_SERVER) {
                         sh """
                             set -e
-
                             echo "SonarScanner: ${scannerHome}"
-
-                            cd AirBnB-Clone
 
                             "${scannerHome}/bin/sonar-scanner" \
                                 -Dsonar.projectKey=stayly-frontend \
@@ -307,47 +291,45 @@ pipeline {
             parallel {
                 stage('OWASP Dependency-Check') {
                     steps {
-                        dir('AirBnB-Clone') {
-                            sh '''
-                                set -e
-                                command -v dependency-check >/dev/null 2>&1 || {
-                                    echo "ERROR: OWASP dependency-check CLI is not installed on the Jenkins agent"
-                                    exit 1
-                                }
+                        sh '''
+                            set -e
+                            command -v dependency-check >/dev/null 2>&1 || {
+                                echo "ERROR: OWASP dependency-check CLI is not installed on the Jenkins agent"
+                                exit 1
+                            }
 
-                                NVD_KEY="${NVD_API_KEY:-}"
-                                NVD_ARGS=()
-                                if [ -n "$NVD_KEY" ]; then
-                                    NVD_ARGS=(--nvdApiKey "$NVD_KEY")
-                                    echo "Using NVD API key for CVE data"
-                                else
-                                    echo "WARNING: NVD_API_KEY not set; dependency-check will use the public NVD API"
-                                fi
+                            NVD_KEY="${NVD_API_KEY:-}"
+                            NVD_ARGS=()
+                            if [ -n "$NVD_KEY" ]; then
+                                NVD_ARGS=(--nvdApiKey "$NVD_KEY")
+                                echo "Using NVD API key for CVE data"
+                            else
+                                echo "WARNING: NVD_API_KEY not set; dependency-check will use the public NVD API"
+                            fi
 
-                                rm -rf owasp-reports && mkdir -p owasp-reports
+                            rm -rf owasp-reports && mkdir -p owasp-reports
 
-                                dependency-check \
-                                    --project "Stayly" \
-                                    --scan . \
-                                    --format HTML \
-                                    --format JSON \
-                                    --out owasp-reports \
-                                    --failOnCVSS 7 \
-                                    --exclude "**/node_modules/**" \
-                                    --exclude "**/.git/**" \
-                                    --exclude "**/dist/**" \
-                                    --exclude "**/coverage/**" \
-                                    "${NVD_ARGS[@]}"
+                            dependency-check \
+                                --project "Stayly" \
+                                --scan . \
+                                --format HTML \
+                                --format JSON \
+                                --out owasp-reports \
+                                --failOnCVSS 7 \
+                                --exclude "**/node_modules/**" \
+                                --exclude "**/.git/**" \
+                                --exclude "**/dist/**" \
+                                --exclude "**/coverage/**" \
+                                "${NVD_ARGS[@]}"
 
-                                echo "OWASP Dependency-Check passed: no vulnerabilities with CVSS >= 7."
-                            '''
-                        }
+                            echo "OWASP Dependency-Check passed: no vulnerabilities with CVSS >= 7."
+                        '''
                     }
 
                     post {
                         always {
                             archiveArtifacts(
-                                artifacts: 'AirBnB-Clone/owasp-reports/**',
+                                artifacts: 'owasp-reports/**',
                                 allowEmptyArchive: true
                             )
                         }
@@ -356,32 +338,30 @@ pipeline {
 
                 stage('Snyk Scan') {
                     steps {
-                        dir('AirBnB-Clone') {
-                            sh '''
-                                set -e
-                                command -v snyk >/dev/null 2>&1 || {
-                                    echo "ERROR: snyk CLI is not installed on the Jenkins agent"
-                                    exit 1
-                                }
+                        sh '''
+                            set -e
+                            command -v snyk >/dev/null 2>&1 || {
+                                echo "ERROR: snyk CLI is not installed on the Jenkins agent"
+                                exit 1
+                            }
 
-                                snyk auth "${SNYK_TOKEN}"
+                            snyk auth "${SNYK_TOKEN}"
 
-                                echo "Running Snyk open-source dependency scan (fails on HIGH/CRITICAL)..."
-                                snyk test \
-                                    --all-projects \
-                                    --severity-threshold=high \
-                                    --json-file-output=snyk-report.json
+                            echo "Running Snyk open-source dependency scan (fails on HIGH/CRITICAL)..."
+                            snyk test \
+                                --all-projects \
+                                --severity-threshold=high \
+                                --json-file-output=snyk-report.json
 
-                                echo "Running Snyk code analysis (informational)..."
-                                snyk code test --severity-threshold=high || true
-                            '''
-                        }
+                            echo "Running Snyk code analysis (informational)..."
+                            snyk code test --severity-threshold=high || true
+                        '''
                     }
 
                     post {
                         always {
                             archiveArtifacts(
-                                artifacts: 'AirBnB-Clone/snyk-report.json',
+                                artifacts: 'snyk-report.json',
                                 allowEmptyArchive: true
                             )
                         }
@@ -392,20 +372,18 @@ pipeline {
 
         stage('Trivy File System Scan') {
             steps {
-                dir('AirBnB-Clone') {
-                    sh '''
-                        set +e
-                        trivy fs --format table --severity HIGH,CRITICAL --output trivy-fs.txt .
-                        echo "Trivy exit code: $?"
-                        exit 0
-                    '''
-                }
+                sh '''
+                    set +e
+                    trivy fs --format table --severity HIGH,CRITICAL --output trivy-fs.txt .
+                    echo "Trivy exit code: $?"
+                    exit 0
+                '''
             }
 
             post {
                 always {
                     archiveArtifacts(
-                        artifacts: 'AirBnB-Clone/trivy-fs.txt',
+                        artifacts: 'trivy-fs.txt',
                         allowEmptyArchive: true
                     )
                 }
@@ -414,22 +392,20 @@ pipeline {
 
         stage('Trivy Config Scan (Dockerfile/IaC)') {
             steps {
-                dir('AirBnB-Clone') {
-                    sh '''
-                        set +e
-                        trivy config --format table --severity HIGH,CRITICAL \
-                            --output trivy-config.txt \
-                            backend frontend infra/k8s infra/helm infra/terraform
-                        echo "Trivy config exit code: $?"
-                        exit 0
-                    '''
-                }
+                sh '''
+                    set +e
+                    trivy config --format table --severity HIGH,CRITICAL \
+                        --output trivy-config.txt \
+                        backend frontend infra/k8s infra/helm infra/terraform
+                    echo "Trivy config exit code: $?"
+                    exit 0
+                '''
             }
 
             post {
                 always {
                     archiveArtifacts(
-                        artifacts: 'AirBnB-Clone/trivy-config.txt',
+                        artifacts: 'trivy-config.txt',
                         allowEmptyArchive: true
                     )
                 }
@@ -472,7 +448,7 @@ pipeline {
                         --build-arg VITE_CLERK_PUBLISHABLE_KEY="${VITE_CLERK_PUBLISHABLE_KEY}" \
                         --tag "${IMAGE}:${IMAGE_TAG}" \
                         --tag "${IMAGE}:latest" \
-                        ./AirBnB-Clone/frontend
+                        ./frontend
                 '''
             }
         }
@@ -541,14 +517,13 @@ pipeline {
 
         stage('Update Helm Image Tags') {
             steps {
-                dir('AirBnB-Clone') {
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'github-token',
-                            usernameVariable: 'GIT_USERNAME',
-                            passwordVariable: 'GIT_TOKEN'
-                        )
-                    ]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'github-token',
+                        usernameVariable: 'GIT_USERNAME',
+                        passwordVariable: 'GIT_TOKEN'
+                    )
+                ]) {
                     sh '''
                         set -e
 
@@ -582,9 +557,8 @@ pipeline {
                         fi
 
                         git commit -m "chore(gitops): deploy build ${BUILD_NUMBER} [skip ci]"
-                        git push "https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/lekymAnisem/AirBnB-Clone.git" HEAD:main
+                        git push "https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/lekymAnisem/Stayly.git" HEAD:main
                     '''
-                    }
                 }
             }
         }
@@ -601,7 +575,7 @@ pipeline {
 
         always {
             archiveArtifacts(
-                artifacts: 'AirBnB-Clone/infra/helm/stayly/values.yaml',
+                artifacts: 'infra/helm/stayly/values.yaml',
                 allowEmptyArchive: true
             )
 
@@ -620,7 +594,7 @@ def buildServiceImage(String contextDir, String ecrRepo) {
     sh """
         set -e
         IMAGE="\${AWS_ACCOUNT_ID}.dkr.ecr.\${AWS_REGION}.amazonaws.com/${ecrRepo}"
-        docker build --tag "\${IMAGE}:\${IMAGE_TAG}" --tag "\${IMAGE}:latest" ./AirBnB-Clone/${contextDir}
+        docker build --tag "\${IMAGE}:\${IMAGE_TAG}" --tag "\${IMAGE}:latest" ./${contextDir}
     """
 }
 
