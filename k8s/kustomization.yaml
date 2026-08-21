@@ -6,7 +6,7 @@ namespace: stayly
 resources:
   - namespace.yaml
   - configmap.yaml
-  - secret.yaml
+  - external-secret.yaml
   - postgres/statefulset.yaml
   - postgres/service.yaml
   - backend/deployment.yaml

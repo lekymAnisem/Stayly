@@ -10,20 +10,26 @@ global:
   nodeEnv: "production"
   configMapName: "stayly-config"
   existingSecretName: "stayly-secrets"
-# The Secret is created by this chart (secrets.create=true) so Argo CD always
-# provisions it on sync. Do not commit real DATABASE_URL, Cloudinary credentials,
-# or Clerk secrets to git; prefer externalizing them via SealedSecrets or an
-# External Secrets operator in a production hardening pass.
+# Real credentials are NOT stored in git. The External Secrets Operator syncs
+# them from AWS Secrets Manager (secret "stayly-creds") into the cluster Secret
+# "stayly-secrets" using IRSA (IAM role stayly-external-secrets). Requires the
+# external-secrets operator to be installed in the cluster.
+# Never commit real DATABASE_URL, Cloudinary credentials, or Clerk secrets to git.
 secrets:
-  create: true
+  create: false
   existingSecretName: "stayly-secrets"
+  externalSecret:
+    enabled: true
+    storeName: "stayly-aws-secrets-manager"
+    remoteKey: "stayly-creds"
+    region: "ap-southeast-2"
+    refreshInterval: 1h
+    # Service account carrying the IRSA role annotation that may read the secret.
+    serviceAccountName: "external-secrets"
+    serviceAccountNamespace: "external-secrets"
+  # Local-only value for the in-cluster postgres StatefulSet; the app database
+  # itself is Neon (DATABASE_URL comes from AWS Secrets Manager).
   postgresPassword: "change-me-in-production"
-  databaseUrl: "postgresql://stayly:stayly@postgres:5432/stayly?sslmode=disable"
-  cloudinaryCloudName: "dk5cvkoy7"
-  cloudinaryApiKey: "347127826581497"
-  cloudinaryApiSecret: "change-me-in-production"
-  adminPassword: "stayly-admin"
-  clerkSecretKey: ""
 config:
   NODE_ENV: "production"
   PORT: "4000"
