@@ -114,9 +114,9 @@ variable "alertmanager_version" {
 }
 
 variable "microservice_names" {
-  description = "List of microservice names to create ECR repositories for"
+  description = "List of microservice names to create ECR repositories for (three-tier: frontend, backend, database)"
   type        = list(string)
-  default     = ["backend", "frontend"]
+  default     = ["backend", "frontend", "database"]
 }
 
 variable "ecr_image_tag_mutability" {
