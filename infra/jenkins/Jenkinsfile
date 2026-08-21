@@ -47,7 +47,7 @@ pipeline {
                 // TODO: set the Stayly repository URL
                 git branch: 'main',
                     credentialsId: 'github-token',
-                    url: 'https://github.com/lekymAnisem/AirBnB-Clone.git'
+                    url: 'https://github.com/lekymAnisem/Stayly.git'
             }
         }
 
