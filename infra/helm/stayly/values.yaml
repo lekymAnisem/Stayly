@@ -55,7 +55,7 @@ services:
       targetPort: 4000
     image:
       repository: stayly-production-backend
-      tag: "22"
+      tag: "23"
       pullPolicy: IfNotPresent
     envVars:
       PORT: "4000"
@@ -95,7 +95,7 @@ services:
       targetPort: 8080
     image:
       repository: stayly-production-frontend
-      tag: "22"
+      tag: "23"
       pullPolicy: IfNotPresent
     envVars: {}
     livenessProbe:
@@ -130,7 +130,7 @@ database:
   replicas: 1
   image:
     repository: stayly-production-database
-    tag: "22"
+    tag: "23"
     pullPolicy: IfNotPresent
   storageSize: 5Gi
   # The official postgres image runs its entrypoint as root and drops
