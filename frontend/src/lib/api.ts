@@ -1,8 +1,11 @@
 import type {
+  Booking,
+  BookingPayload,
   Category,
   Destination,
   Filters,
   InspirationCardData,
+  PaymentPayload,
   Property,
 } from '../types'
 import {
@@ -179,6 +182,33 @@ export async function fetchProperty(
   signal?: AbortSignal,
 ): Promise<Property> {
   return getJson<Property>(`/properties/${encodeURIComponent(id)}`, signal)
+}
+
+/** ---- Bookings API ---- */
+
+export async function fetchAvailability(
+  propertyId: string,
+  checkIn: string,
+  checkOut: string,
+  signal?: AbortSignal,
+): Promise<{ available: boolean }> {
+  const q = new URLSearchParams({ propertyId, checkIn, checkOut })
+  return getJson<{ available: boolean }>(`/bookings/availability?${q.toString()}`, signal)
+}
+
+export async function createBooking(
+  payload: BookingPayload,
+  token?: string,
+): Promise<Booking> {
+  return postJson<Booking>('/bookings', payload, token)
+}
+
+export async function payBooking(
+  bookingId: string,
+  payment: PaymentPayload,
+  token?: string,
+): Promise<Booking> {
+  return postJson<Booking>(`/bookings/${bookingId}/pay`, payment, token)
 }
 
 /** ---- Admin API ---- */

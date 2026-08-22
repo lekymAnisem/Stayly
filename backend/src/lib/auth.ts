@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import { timingSafeEqual } from 'node:crypto'
 import { config } from '../config.js'
-import { isAdminEmail, verifyClerkSession } from './clerk.js'
+import { isAdminEmail, verifyClerkJwt, verifyClerkSession } from './clerk.js'
 
 const adminToken = Buffer.from(config.adminPassword)
 
@@ -76,5 +76,18 @@ export async function requireAdmin(
     })
   } catch {
     res.status(401).json({ error: 'Invalid or expired session' })
+  }
+}
+
+export async function optionalClerkUserId(req: Request): Promise<string | null> {
+  const header = req.headers.authorization ?? ''
+  const token = header.startsWith('Bearer ') ? header.slice(7) : ''
+  if (!token) return null
+
+  try {
+    const session = await verifyClerkJwt(token)
+    return session.subject || null
+  } catch {
+    throw Object.assign(new Error('Invalid or expired session'), { statusCode: 401 })
   }
 }

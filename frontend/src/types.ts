@@ -58,3 +58,38 @@ export interface Filters {
   instantBook: boolean
   guestFavorite: boolean
 }
+
+export interface Booking {
+  id: string
+  propertyId: string
+  checkIn: string
+  checkOut: string
+  guests: number
+  nights: number
+  pricePerNight: number
+  subtotal: number
+  serviceFee: number
+  total: number
+  status: 'pending' | 'confirmed' | 'cancelled' | 'expired'
+  paymentMethod: string | null
+  cardLast4: string | null
+  paymentReference: string | null
+  paidAt: string | null
+  createdAt: string
+}
+
+export interface BookingPayload {
+  propertyId: string
+  checkIn: string
+  checkOut: string
+  guests: number
+  guestName?: string
+  guestEmail?: string
+}
+
+export interface PaymentPayload {
+  cardName: string
+  cardNumber: string
+  cardExpiry: string
+  cardCvc: string
+}

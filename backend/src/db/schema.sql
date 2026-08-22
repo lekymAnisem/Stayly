@@ -46,6 +46,33 @@ CREATE TABLE IF NOT EXISTS inspirations (
   image       TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS bookings (
+  id                TEXT PRIMARY KEY,
+  property_id       TEXT NOT NULL REFERENCES properties (id),
+  clerk_user_id     TEXT,
+  guest_name        TEXT,
+  guest_email       TEXT,
+  check_in          DATE NOT NULL,
+  check_out         DATE NOT NULL,
+  guests            INTEGER NOT NULL,
+  nights            INTEGER NOT NULL,
+  price_per_night   INTEGER NOT NULL,
+  subtotal          INTEGER NOT NULL,
+  service_fee       INTEGER NOT NULL,
+  total             INTEGER NOT NULL,
+  status            TEXT NOT NULL DEFAULT 'pending',
+  payment_method    TEXT,
+  card_last4        TEXT,
+  payment_reference TEXT,
+  paid_at           TIMESTAMPTZ,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT bookings_dates_valid CHECK (check_out > check_in),
+  CONSTRAINT bookings_status_valid CHECK (
+    status IN ('pending', 'confirmed', 'cancelled', 'expired')
+  )
+);
+
 CREATE INDEX IF NOT EXISTS idx_properties_category ON properties (category);
 CREATE INDEX IF NOT EXISTS idx_properties_price ON properties (price);
 CREATE INDEX IF NOT EXISTS idx_properties_guest_favorite ON properties (guest_favorite);
+CREATE INDEX IF NOT EXISTS idx_bookings_property_dates ON bookings (property_id, check_in, check_out);
